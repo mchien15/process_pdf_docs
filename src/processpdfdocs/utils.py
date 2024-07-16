@@ -36,10 +36,10 @@ def is_text_selectable(pdf_path):
     if not pdf_path.lower().endswith('.pdf'):
         print("The file is not a PDF.")
         return False
-
+    
     try:
         pdf_document = fitz.open(pdf_path)
-        text_content_threshold = 200
+        text_content_threshold = 150
         total_text_length = 0
 
         for page_num in range(len(pdf_document)):
@@ -47,15 +47,14 @@ def is_text_selectable(pdf_path):
             text = page.get_text("text")
             total_text_length += len(text.strip())
 
-            if total_text_length > text_content_threshold:
-                common_signature_phrases = ["Digitally signed", "Signature", "Certified by", "Ngày ký:"]
-                if any(phrase in text for phrase in common_signature_phrases):
-                    continue
-                return True
-        
-        # If the total text length is less than or equal to the threshold, return False
         if total_text_length <= text_content_threshold:
             return False
+
+        if total_text_length > text_content_threshold:
+            common_signature_phrases = ["Digitally signed", "Signature", "Certified by", "Ngày ký:"]
+            if any(phrase in text for phrase in common_signature_phrases):
+                return False
+            return True
 
     except Exception as e:
         print(f"An error occurred: {e}")

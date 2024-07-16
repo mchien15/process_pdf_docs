@@ -1,5 +1,4 @@
 import os
-from .utils import is_text_selectable, ocr_pdf_to_text_and_html, extract_table_from_pdf
 from .download_models import download_models
 
 class Processor:
@@ -7,6 +6,7 @@ class Processor:
         self.model_dir = os.path.expanduser(model_dir)
 
         self._check_and_download_models()
+        self._import_utils()
 
     def _check_and_download_models(self):
         required_models = ['rotation_model.onnx', 'table_detect_model.pt', 'cell_detect_model.pt']
@@ -15,6 +15,10 @@ class Processor:
                 print(f"Model {model} not found. Downloading...")
                 download_models(self.model_dir)
                 break
+
+    def _import_utils(self):
+        global is_text_selectable, ocr_pdf_to_text_and_html, extract_table_from_pdf
+        from .utils import is_text_selectable, ocr_pdf_to_text_and_html, extract_table_from_pdf
 
     def process_pdf(self, pdf_path):
         if not os.path.isfile(pdf_path):

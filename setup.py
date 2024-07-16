@@ -10,7 +10,7 @@ class PostInstallCommand(setuptools.command.install.install):
 
 setup(
     name='processpdfdocs',
-    version='0.0.10',
+    version='0.0.12',
     packages=find_packages(),
     install_requires=[
         "vietocr==0.3.13",

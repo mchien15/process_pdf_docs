@@ -32,9 +32,9 @@ def save_response_content(response, dest_path):
 def download_models(model_dir='models'):
     os.makedirs(model_dir, exist_ok=True)
     model_urls = {
-        'rotation_new_data': '1oQJzzD7FSvYG1rBvzOftLSbOoScazBAk',
-        'table_detect': '1MvMgipndrK50ahtyLARp9Nt3-b2qfjhS',
-        'cell_detect': '1-7rV13nkNicKNmUmelnKbTRSCRPIo-kQ'
+        'rotation_model': '1oQJzzD7FSvYG1rBvzOftLSbOoScazBAk',
+        'table_detect_model': '1MvMgipndrK50ahtyLARp9Nt3-b2qfjhS',
+        'cell_detect_model': '1-7rV13nkNicKNmUmelnKbTRSCRPIo-kQ'
     }
 
     for model_name, file_id in model_urls.items():
