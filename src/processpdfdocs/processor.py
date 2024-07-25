@@ -37,7 +37,7 @@ class Processor:
             extracted_text = ocr_pdf_to_text_and_html(pdf_path, temp_image_converted_path=self.temp_image_converted_path, openai_api_key=self.openai_api_key)
             texts = "\n".join(extracted_text)
         else:
-            extracted_text = extract_table_from_pdf(pdf_path)
+            extracted_text = extract_table_from_pdf(pdf_path, openai_api_key=self.openai_api_key)
             texts = "\n".join(extracted_text)
 
         return texts
