@@ -10,7 +10,7 @@ class PostInstallCommand(setuptools.command.install.install):
 
 setup(
     name='processpdfdocs',
-    version='0.0.12.8',
+    version='0.0.12.11',
     packages=find_packages(),
     install_requires=[
     "vietocr==0.3.13",
@@ -28,7 +28,8 @@ setup(
     "paddleocr==2.7.0.3",
     "paddlepaddle==2.5.2",
     "openai==1.12.0",
-    "pytesseract==0.3.10"
+    "pytesseract==0.3.10",
+    "Werkzeug==3.0.3"
     ],
     cmdclass={
         'install': PostInstallCommand,

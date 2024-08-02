@@ -23,8 +23,13 @@ from paddleocr import PaddleOCR, PPStructure
 import base64
 import mimetypes
 import requests
+import shutil
+from werkzeug.utils import secure_filename
+
 
 classes = ['0', '180', '270', '90']
+
+# chatbot_link = "https://api-chat-ivivi.isofh.vn"
 
 model_dir = os.getenv('MODEL_DIR', os.path.join(os.path.expanduser('~'), '.processpdfdocs', 'models'))
 
@@ -294,7 +299,7 @@ def has_text(image_path):
     text = pytesseract.image_to_string(image)
     return len(text.strip()) > 30
 
-def extract_table_from_pdf(pdf_path, openai_api_key):
+def extract_table_from_pdf(pdf_path, temp_image_converted_path, openai_api_key, chatbot_domain):
     # with open(pdf_path, "rb") as f:
     #     pdf = pdftotext.PDF(f, physical=True)
 
@@ -310,6 +315,7 @@ def extract_table_from_pdf(pdf_path, openai_api_key):
 
     extracted_content = []
 
+    pdf_filename = secure_filename(os.path.basename(pdf_path))
     pdfFileObj = open(pdf_path, 'rb')
     pdfReaded = PyPDF2.PdfReader(pdfFileObj)
 
@@ -372,10 +378,17 @@ def extract_table_from_pdf(pdf_path, openai_api_key):
                     if not has_text(f'PDF_image.png'):
                         image_text = ''
                     else:
+                        # uploads/...../...../pdf_filename_pagenum_i_figure.png
+                        figure_img_path = os.path.join(temp_image_converted_path, f'{pdf_filename}_{pagenum}_{i}_figure.png')
+                        shutil.copy(f'PDF_image.png', figure_img_path)
+                        markdown_img_link = f'![Figure {i}]({chatbot_domain}/{figure_img_path})'
+                        # ![Figure i](https://api-chat-ivivi.isofh.vn/uploads/...../...../pdf_filename_pagenum_i_figure.png)
                         image_mime_type, _ = mimetypes.guess_type(f'PDF_image.png')
                         base64_image = encode_image(f'PDF_image.png')
 
                         image_text = describe_image_with_openai(image_mime_type, base64_image, openai_api_key=openai_api_key)
+
+                        image_text = '\n' + markdown_img_link + '\n' + image_text
                     text_from_images.append(image_text)
                     page_content.append(image_text)
                     page_text.append('image')
@@ -395,7 +408,7 @@ def extract_table_from_pdf(pdf_path, openai_api_key):
 
     return extracted_content
 
-def ocr_pdf_to_text_and_html(pdf_path, temp_image_converted_path, openai_api_key):
+def ocr_pdf_to_text_and_html(pdf_path, temp_image_converted_path, openai_api_key, chatbot_domain):
 
     results = []
 
@@ -406,9 +419,9 @@ def ocr_pdf_to_text_and_html(pdf_path, temp_image_converted_path, openai_api_key
             # cell_detector = YOLO('/home/ivirse/chienlm/yolo_cell_detect/runs/detect/table_cell_detect/weights/best.pt')
             structure_engine = PPStructure(table=False, ocr=False, show_log=True)
 
-            for i, image in enumerate(images):
+            for page_number, image in enumerate(images):
                 print(type(image))
-                print("Page: ", i + 1)
+                print("Page: ", page_number + 1)
                 a_page_output = []
 
                 # cv2_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -427,6 +440,7 @@ def ocr_pdf_to_text_and_html(pdf_path, temp_image_converted_path, openai_api_key
                     cv2_img = cv2.cvtColor(np.array(rotated_image), cv2.COLOR_RGB2BGR)
                     pdf_file_name = os.path.basename(pdf_path)
                     pdf_file_name = os.path.splitext(pdf_file_name)[0]
+                    pdf_file_name = secure_filename(pdf_file_name)
                     # image_path = os.path.join(temp_image_converted_path, f'{pdf_file_name}_{i}.jpg')
                     # cv2.imwrite(image_path, cv2_img)
                     # try:
@@ -517,13 +531,15 @@ def ocr_pdf_to_text_and_html(pdf_path, temp_image_converted_path, openai_api_key
                             continue
                         figure_regions.append((x1, y1, x2, y2))
                         figure_img = cv2_img[int(y1):int(y2), int(x1):int(x2)]
-                        figure_img_path = os.path.join(temp_image_converted_path, f'{pdf_file_name}_{i}_figure.jpg')
+                        figure_img_path = os.path.join(temp_image_converted_path, f'{pdf_file_name}_{page_number}_{i}_figure.png')
                         cv2.imwrite(figure_img_path, figure_img)
+                        markdown_img_link = f'![Figure {i}]({chatbot_domain}/{figure_img_path})'
 
                         image_mime_type, _ = mimetypes.guess_type(figure_img_path)
                         base64_image = encode_image(figure_img_path)
 
                         content = describe_image_with_openai(image_mime_type, base64_image, openai_api_key)
+                        content = '\n' + markdown_img_link + '\n' + content
                         a_page_output.append(((x1, y1, x2, y2), content, 'figure'))
                     
                     # except:
